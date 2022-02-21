@@ -1,7 +1,8 @@
 #ifndef SATEL_INT_RS_LIB
 #define SATEL_INT_RS_LIB
 
-#include "SimpleSatelCommands.h"
+#include "command/OutputsStateCommand.h"
+#include "command/ZonesViolationCommand.h"
 #include "SimpleSatelFrame.h"
 
 #define MAX_ANSWER_AWAIT 3000
@@ -30,6 +31,10 @@ public:
 	inline T getData() {
 		return data;
 	}
+	void setData(T data)  {
+		this->data = data;
+		this->success = true;
+	}
 };
 
 class SimpleSatelLibClass {
@@ -40,6 +45,7 @@ class SimpleSatelLibClass {
 
 	bool readAnswer(byte *bytes, int &readCount);
 	int readBytes(byte *bytes);
+	bool processCommand(SSatel::Command command, SSatel::Answer &answer);
 
 public:
 	SimpleSatelLibClass() :
@@ -47,6 +53,7 @@ public:
 	}
 
 	Result<SSatel::OutputsStateAnswer> readOutputsState();
+	Result<SSatel::ZonesViolationAnswer> readZonesViolation();
 
 	inline void setWriter(Writer writer) {
 		this->writeData = writer;

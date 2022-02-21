@@ -6,6 +6,9 @@ The library is on the very beginning phase of development. The basic structure i
 ## Commands
 The list of already implemented commands:
 
+### (0x0) Zones violation
+Command to get the violation of zones.
+
 ### (0x17) Outputs State
 Command to get the state of outputs.
 

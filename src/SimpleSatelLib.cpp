@@ -1,5 +1,7 @@
 #include "SimpleSatelLib.h"
 
+#include "command/Command.h"
+
 #ifdef TEST
 void delay(int delay) {
 }
@@ -16,46 +18,40 @@ enum CmdReadingState {
 	READY
 };
 
-CmdReadingState initialState();
-CmdReadingState nextReadingState(CmdReadingState currentState, byte readByte);
+CmdReadingState initialState() {
+	return AWAITING_FIRST_HEADER;
+}
 
-Result<SSatel::OutputsStateAnswer> SimpleSatelLibClass::readOutputsState() {
-	if (writeData == NULL || readData == NULL || isDataAvailable == NULL) {
-		Result<SSatel::OutputsStateAnswer> result;
-		return result;
-	}
-	// send command
-	byte bytes[CMD_OUTPUT_STATE_LENGTH];
-	SSatel::OutputsStateCommand command;
-	command.toBytes(bytes);
-	writeData(bytes, CMD_OUTPUT_STATE_LENGTH);
-
-	// await answer
-	int waitTime = 0;
-	while (!isDataAvailable()) {
-		delay(10);
-		waitTime += 10;
-
-		if (waitTime >= MAX_ANSWER_AWAIT) {
-			Result<SSatel::OutputsStateAnswer> result;
-			return result;
+CmdReadingState nextReadingState(CmdReadingState currentState, byte readByte) {
+	if (currentState == AWAITING_FIRST_HEADER) {
+		if (readByte == 0xFE) {
+			return AWAITING_SECOND_HEADER;
+		} else {
+			return AWAITING_FIRST_HEADER;
 		}
+	} else if (currentState == AWAITING_SECOND_HEADER) {
+		if (readByte == 0xFE) {
+			return AWAITING_SECOND_HEADER;
+		} else {
+			return AWAITING_CMD;
+		}
+	} else if (currentState == AWAITING_CMD) {
+		if (readByte == 0xFE) {
+			return AWAITING_CMD;
+		} else {
+			return AWAITING_DATA_AND_CRC;
+		}
+	} else if (currentState == AWAITING_DATA_AND_CRC) {
+		if (readByte == 0xFE) {
+			return AWAITING_SECOND_FOOTER;
+		} else {
+			return AWAITING_DATA_AND_CRC;
+		}
+	} else if (currentState == AWAITING_SECOND_FOOTER && readByte == 0x0D) {
+		return READY;
+	} else {
+		return AWAITING_DATA_AND_CRC;
 	}
-	// read answer
-	int readCount = 0;
-	byte readBytes[READING_BUFFER_SIZE];
-	if (!readAnswer(readBytes, readCount)) {
-		Result<SSatel::OutputsStateAnswer> result;
-		return result;
-	}
-
-	SSatel::OutputsStateAnswer answer;
-	if (!answer.fromBytes(readBytes, readCount)) {
-		Result<SSatel::OutputsStateAnswer> result;
-		return result;
-	}
-	Result<SSatel::OutputsStateAnswer> result(answer);
-	return result;
 }
 
 bool SimpleSatelLibClass::readAnswer(byte *bytes, int &readCount) {
@@ -117,40 +113,66 @@ int SimpleSatelLibClass::readBytes(byte *bytes) {
 	return state == READY ? readCount : 0;
 }
 
-CmdReadingState initialState() {
-	return AWAITING_FIRST_HEADER;
+bool SimpleSatelLibClass::processCommand(SSatel::Command command,
+		SSatel::Answer &answer) {
+	if (writeData == NULL || readData == NULL || isDataAvailable == NULL) {
+		return false;
+	}
+
+	// send command
+	byte *bytes = new byte[command.getLength()];
+	command.toBytes(bytes);
+	writeData(bytes, command.getLength());
+	delete bytes;
+
+	// await answer
+	int waitTime = 0;
+	while (!isDataAvailable()) {
+		delay(10);
+		waitTime += 10;
+
+		if (waitTime >= MAX_ANSWER_AWAIT) {
+			return false;
+		}
+	}
+
+	// read answer
+	int readCount = 0;
+	byte readBytes[READING_BUFFER_SIZE];
+	if (!readAnswer(readBytes, readCount)) {
+		return false;
+	}
+
+	// parse answer
+	if (!answer.fromBytes(readBytes, readCount)) {
+		return false;
+	}
+
+	return true;
 }
 
-CmdReadingState nextReadingState(CmdReadingState currentState, byte readByte) {
-	if (currentState == AWAITING_FIRST_HEADER) {
-		if (readByte == 0xFE) {
-			return AWAITING_SECOND_HEADER;
-		} else {
-			return AWAITING_FIRST_HEADER;
-		}
-	} else if (currentState == AWAITING_SECOND_HEADER) {
-		if (readByte == 0xFE) {
-			return AWAITING_SECOND_HEADER;
-		} else {
-			return AWAITING_CMD;
-		}
-	} else if (currentState == AWAITING_CMD) {
-		if (readByte == 0xFE) {
-			return AWAITING_CMD;
-		} else {
-			return AWAITING_DATA_AND_CRC;
-		}
-	} else if (currentState == AWAITING_DATA_AND_CRC) {
-		if (readByte == 0xFE) {
-			return AWAITING_SECOND_FOOTER;
-		} else {
-			return AWAITING_DATA_AND_CRC;
-		}
-	} else if (currentState == AWAITING_SECOND_FOOTER && readByte == 0x0D) {
-		return READY;
-	} else {
-		return AWAITING_DATA_AND_CRC;
+Result<SSatel::OutputsStateAnswer> SimpleSatelLibClass::readOutputsState() {
+	SSatel::OutputsStateCommand command;
+	SSatel::OutputsStateAnswer answer;
+	if (processCommand(command, answer)) {
+		Result<SSatel::OutputsStateAnswer> result(answer);
+		return result;
 	}
+
+	Result<SSatel::OutputsStateAnswer> result;
+	return result;
+}
+
+Result<SSatel::ZonesViolationAnswer> SimpleSatelLibClass::readZonesViolation() {
+	SSatel::ZonesViolationCommand command;
+	SSatel::ZonesViolationAnswer answer;
+	if (processCommand(command, answer)) {
+		Result<SSatel::ZonesViolationAnswer> result(answer);
+		return result;
+	}
+
+	Result<SSatel::ZonesViolationAnswer> result;
+	return result;
 }
 
 SimpleSatelLibClass SimpleSatel;

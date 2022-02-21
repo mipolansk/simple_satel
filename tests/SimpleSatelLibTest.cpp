@@ -62,6 +62,7 @@ namespace SSatel {
 					}
 				}
 			}
+			EXPECT_EQ(result.getData().isOutputActive(3), true);
 		}
 
 		//

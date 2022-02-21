@@ -13,6 +13,8 @@ typedef unsigned char byte;
 
 #endif
 
+#define FRAME_BASIC_LENGTH 7
+
 namespace SSatel {
 	class Frame {
 		uint8_t head1;
@@ -36,6 +38,9 @@ namespace SSatel {
 		}
 		inline void setData(uint8_t position, uint8_t value) {
 			data[position] = value;
+		}
+		inline uint8_t getDataLength() {
+			return dataLength;
 		}
 
 	public:
