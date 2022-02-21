@@ -15,3 +15,5 @@ Command to get the state of outputs.
 ## Requirements
 As the library is on very beginning phase it is currently tested only with **ESP8266** and **Integra64 connected with ETHM-1 Plus** module. It may happen, that it will not work properly with other hardware.
 
+## Examples
+Take a look on [examples](examples/) directory to check how to use the library.

@@ -1,0 +1,83 @@
+/**
+ * It's a simple example, where the library is used to check violated zones.
+ */
+
+#include <SimpleSatelLib.h>
+#include <ESP8266WiFi.h>
+
+#define WIFI_SSID "<set your WIFI SSID>"
+#define WIFI_PWD "<set your WIFI password>"
+
+#define SATEL_HOST "<set ip of your ETHM-1 module>"
+#define SATEL_PORT 7094 // Change if needed, default port is used
+
+WiFiClient client;
+bool sent = false;
+
+void setup() {
+  Serial.begin(115200);
+  WiFi.begin(WIFI_SSID, WIFI_PWD);
+
+  SimpleSatel.setWriter(&writer);
+  SimpleSatel.setReader(&reader);
+  SimpleSatel.setChecker(&checker);
+}
+
+void loop() {
+  if (WiFi.status() != WL_CONNECTED) {
+    Serial.print("WiFI connecting");
+    while (WiFi.status() != WL_CONNECTED) {
+      Serial.print(".");
+      delay(1000);
+    }
+    Serial.println(".");
+  }
+
+  if (!client.connected()) {
+    Serial.print("Satel connecting");
+    while (!client.connect(SATEL_HOST, SATEL_PORT)) {
+      if (WiFi.status() != WL_CONNECTED) {
+        return;
+      }
+      Serial.print(".");
+      delay(1000);
+    }
+    Serial.println(".");
+  }
+
+  Result<SSatel::ZonesViolationAnswer> zonesState = SimpleSatel.readZonesViolation();
+  if (zonesState.isSuccess()) {
+    if (zonesState.getData().isZoneViolated(3)) {
+      Serial.println("Zone No 3 is vialoted!");
+    }
+    print(zonesState.getData());
+  }
+  else {
+    Serial.println("No response");
+  }
+
+  delay(3000);
+}
+
+uint8_t writer(byte *bytes, uint8_t length) {
+  return client.write(bytes, length);
+}
+
+byte reader() {
+  return client.read();
+}
+
+uint8_t checker() {
+  return client.available();
+}
+
+void print(SSatel::Frame frame) {
+  byte bytes[23];
+  frame.toBytes(bytes);
+
+  for (int i = 0; i < 23; i++) {
+    Serial.print(bytes[i], HEX);
+    Serial.print(" ");
+  }
+  Serial.println();
+}
