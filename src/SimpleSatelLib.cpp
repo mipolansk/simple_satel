@@ -57,7 +57,7 @@ CmdReadingState nextReadingState(CmdReadingState currentState, byte readByte) {
 bool SimpleSatelLibClass::readAnswer(byte *bytes, int &readCount) {
 	// await answer
 	int waitTime = 0;
-	while (!isDataAvailable()) {
+	while (!client.available()) {
 		delay(10);
 		waitTime += 10;
 
@@ -76,16 +76,16 @@ int SimpleSatelLibClass::readBytes(byte *bytes) {
 
 	uint8_t frameStartPosition = -1;
 	CmdReadingState state = initialState();
-	while (isDataAvailable() && readCount < READING_BUFFER_SIZE) {
+	while (client.available() && readCount < READING_BUFFER_SIZE) {
 		if (state == READY) {
 			// Got one full response. Stopping further processing
 			break;
 		}
 
 		delay(10);
-		uint8_t toRead = isDataAvailable();
+		uint8_t toRead = client.available();
 		for (uint8_t i = 0; i < toRead; i++) {
-			bytes[i] = readData();
+			bytes[i] = client.read();
 			CmdReadingState previousState = state;
 			state = nextReadingState(state, bytes[i]);
 			readCount++;
@@ -115,19 +115,15 @@ int SimpleSatelLibClass::readBytes(byte *bytes) {
 
 bool SimpleSatelLibClass::processCommand(SSatel::Command command,
 		SSatel::Answer &answer) {
-	if (writeData == NULL || readData == NULL || isDataAvailable == NULL) {
-		return false;
-	}
-
 	// send command
 	byte *bytes = new byte[command.getLength()];
 	command.toBytes(bytes);
-	writeData(bytes, command.getLength());
+	client.write(bytes, command.getLength());
 	delete bytes;
 
 	// await answer
 	int waitTime = 0;
-	while (!isDataAvailable()) {
+	while (!client.available()) {
 		delay(10);
 		waitTime += 10;
 
@@ -147,6 +143,24 @@ bool SimpleSatelLibClass::processCommand(SSatel::Command command,
 	if (!answer.fromBytes(readBytes, readCount)) {
 		return false;
 	}
+
+	return true;
+}
+
+bool SimpleSatelLibClass::connected() {
+	return client.connected();
+}
+
+bool SimpleSatelLibClass::connect(const char *host, int port) {
+	int retry = 0;
+	while (!client.connect(host, port)) {
+		if (retry >= timeout) {
+			return false;
+		}
+		delay(1000);
+	}
+
+	delay(250);
 
 	return true;
 }

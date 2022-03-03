@@ -4,6 +4,7 @@
 #include "command/OutputsStateCommand.h"
 #include "command/ZonesViolationCommand.h"
 #include "SimpleSatelFrame.h"
+#include <WiFi.h>
 
 #define MAX_ANSWER_AWAIT 3000
 
@@ -39,31 +40,20 @@ public:
 
 class SimpleSatelLibClass {
 
-	Writer writeData;
-	ReaderRead readData;
-	ReaderAvailable isDataAvailable;
+	WiFiClient client;
+	int timeout = 15000; // About 15 seconds.
 
 	bool readAnswer(byte *bytes, int &readCount);
 	int readBytes(byte *bytes);
 	bool processCommand(SSatel::Command command, SSatel::Answer &answer);
 
 public:
-	SimpleSatelLibClass() :
-			writeData(NULL), readData(NULL), isDataAvailable(NULL) {
-	}
 
+	bool connected();
+	bool connect(const char *host, int port);
 	Result<SSatel::OutputsStateAnswer> readOutputsState();
 	Result<SSatel::ZonesViolationAnswer> readZonesViolation();
 
-	inline void setWriter(Writer writer) {
-		this->writeData = writer;
-	}
-	inline void setReader(ReaderRead reader) {
-		this->readData = reader;
-	}
-	inline void setChecker(ReaderAvailable checker) {
-		this->isDataAvailable = checker;
-	}
 };
 
 extern SimpleSatelLibClass SimpleSatel;

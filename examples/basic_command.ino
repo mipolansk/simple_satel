@@ -3,7 +3,7 @@
  */
 
 #include <SimpleSatelLib.h>
-#include <ESP8266WiFi.h>
+#include <WiFi.h>
 
 #define WIFI_SSID "<set your WIFI SSID>"
 #define WIFI_PWD "<set your WIFI password>"
@@ -17,10 +17,6 @@ bool sent = false;
 void setup() {
   Serial.begin(115200);
   WiFi.begin(WIFI_SSID, WIFI_PWD);
-
-  SimpleSatel.setWriter(&writer);
-  SimpleSatel.setReader(&reader);
-  SimpleSatel.setChecker(&checker);
 }
 
 void loop() {
@@ -33,16 +29,9 @@ void loop() {
     Serial.println(".");
   }
 
-  if (!client.connected()) {
-    Serial.print("Satel connecting");
-    while (!client.connect(SATEL_HOST, SATEL_PORT)) {
-      if (WiFi.status() != WL_CONNECTED) {
-        return;
-      }
-      Serial.print(".");
-      delay(1000);
-    }
-    Serial.println(".");
+  if (!SimpleSatel.connected() && !SimpleSatel.connect(SATEL_HOST, SATEL_PORT)) {
+    Serial.println("Could not connect with ETHM module...");
+    return;
   }
 
   Result<SSatel::ZonesViolationAnswer> zonesState = SimpleSatel.readZonesViolation();
@@ -57,18 +46,6 @@ void loop() {
   }
 
   delay(3000);
-}
-
-uint8_t writer(byte *bytes, uint8_t length) {
-  return client.write(bytes, length);
-}
-
-byte reader() {
-  return client.read();
-}
-
-uint8_t checker() {
-  return client.available();
 }
 
 void print(SSatel::Frame frame) {
