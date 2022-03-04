@@ -1,16 +1,13 @@
 #ifndef SATEL_INT_RS_LIB
 #define SATEL_INT_RS_LIB
 
-#include "command/OutputsStateCommand.h"
 #include "command/ZonesViolationCommand.h"
+#include "command/ZonesTamperCommand.h"
+#include "command/OutputsStateCommand.h"
 #include "SimpleSatelFrame.h"
 #include <WiFi.h>
 
 #define MAX_ANSWER_AWAIT 3000
-
-typedef uint8_t (*Writer)(byte*, uint8_t);
-typedef byte (*ReaderRead)();
-typedef uint8_t (*ReaderAvailable)();
 
 template<class T>
 class Result {
@@ -51,8 +48,9 @@ public:
 
 	bool connected();
 	bool connect(const char *host, int port);
-	Result<SSatel::OutputsStateAnswer> readOutputsState();
 	Result<SSatel::ZonesViolationAnswer> readZonesViolation();
+	Result<SSatel::ZonesTamperAnswer> readZonesTamper();
+	Result<SSatel::OutputsStateAnswer> readOutputsState();
 
 };
 

@@ -1,7 +1,7 @@
 #ifndef ZONES_VIOLATION_COMMAND
 #define ZONES_VIOLATION_COMMAND
 
-#include "../SimpleSatelFrame.h"
+#include "Command.h"
 
 namespace SSatel {
 	class ZonesViolationCommand: public Command {

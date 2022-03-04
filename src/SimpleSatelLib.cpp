@@ -2,11 +2,6 @@
 
 #include "command/Command.h"
 
-#ifdef TEST
-void delay(int delay) {
-}
-#endif
-
 #define READING_BUFFER_SIZE 64
 
 enum CmdReadingState {
@@ -165,18 +160,6 @@ bool SimpleSatelLibClass::connect(const char *host, int port) {
 	return true;
 }
 
-Result<SSatel::OutputsStateAnswer> SimpleSatelLibClass::readOutputsState() {
-	SSatel::OutputsStateCommand command;
-	SSatel::OutputsStateAnswer answer;
-	if (processCommand(command, answer)) {
-		Result<SSatel::OutputsStateAnswer> result(answer);
-		return result;
-	}
-
-	Result<SSatel::OutputsStateAnswer> result;
-	return result;
-}
-
 Result<SSatel::ZonesViolationAnswer> SimpleSatelLibClass::readZonesViolation() {
 	SSatel::ZonesViolationCommand command;
 	SSatel::ZonesViolationAnswer answer;
@@ -186,6 +169,30 @@ Result<SSatel::ZonesViolationAnswer> SimpleSatelLibClass::readZonesViolation() {
 	}
 
 	Result<SSatel::ZonesViolationAnswer> result;
+	return result;
+}
+
+Result<SSatel::ZonesTamperAnswer> SimpleSatelLibClass::readZonesTamper() {
+	SSatel::ZonesTamperCommand command;
+	SSatel::ZonesTamperAnswer answer;
+	if (processCommand(command, answer)) {
+		Result<SSatel::ZonesTamperAnswer> result(answer);
+		return result;
+	}
+
+	Result<SSatel::ZonesTamperAnswer> result;
+	return result;
+}
+
+Result<SSatel::OutputsStateAnswer> SimpleSatelLibClass::readOutputsState() {
+	SSatel::OutputsStateCommand command;
+	SSatel::OutputsStateAnswer answer;
+	if (processCommand(command, answer)) {
+		Result<SSatel::OutputsStateAnswer> result(answer);
+		return result;
+	}
+
+	Result<SSatel::OutputsStateAnswer> result;
 	return result;
 }
 

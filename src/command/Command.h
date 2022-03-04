@@ -4,12 +4,11 @@
 #include "../SimpleSatelFrame.h"
 
 #define CMD_ZONE_VIOLATION 0x0
+#define CMD_ZONE_TAMPER 0x1
 #define CMD_OUTPUT_STATE 0x17
 
-#define CMD_ZONE_VIOLATION_LENGTH 7
-#define CMD_OUTPUT_STATE_LENGTH 7
-
 #define ANS_ZONE_VIOLATION_DATA_LENGTH 16
+#define ANS_ZONE_TAMPER_DATA_LENGTH 16
 #define ANS_OUTPUT_STATE_DATA_LENGTH 16
 
 namespace SSatel {

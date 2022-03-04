@@ -1,17 +1,7 @@
 #ifndef SATEL_FRAME
 #define SATEL_FRAME
 
-#ifndef TEST
-
 #include <Arduino.h>
-
-#else
-
-#include <inttypes.h>
-#include <cstddef>
-typedef unsigned char byte;
-
-#endif
 
 #define FRAME_BASIC_LENGTH 7
 
