@@ -3,24 +3,27 @@
 namespace SSatel {
 
 	Frame::Frame(uint8_t dataLength) :
-			head1(0xFE), head2(0xFE), cmd(0), crcHigh(0), crcLow(0), //
-			foot1(0xFE), foot2(0x0D), dataLength(dataLength) {
+		head1(0xFE), head2(0xFE), cmd(0), crcHigh(0), crcLow(0), //
+		foot1(0xFE), foot2(0x0D), dataLength(dataLength) {
 		if (dataLength > 0) {
 			data = new uint8_t[dataLength];
+			for (int i = 0; i < dataLength; i++) {
+				data[i] = 0;
+			}
 		} else {
 			data = NULL;
 		}
 	}
 
-	Frame::Frame(const Frame &toCopy) :
-			Frame(toCopy.dataLength) {
+	Frame::Frame(const Frame& toCopy) :
+		Frame(toCopy.dataLength) {
 		cmd = toCopy.cmd;
 		for (int i = 0; i < dataLength; i++) {
 			data[i] = toCopy.data[i];
 		}
 	}
 
-	Frame::Frame(byte *bytes, uint8_t length) {
+	Frame::Frame(byte* bytes, uint8_t length) {
 		if (length < 7) {
 			head1 = 0xFE;
 			head2 = 0xFE;
@@ -63,7 +66,7 @@ namespace SSatel {
 		cmd = command;
 	}
 
-	void Frame::toBytes(byte *bytes) {
+	void Frame::toBytes(byte* bytes) {
 		calculateCrc();
 
 		uint8_t idx = 0;
@@ -81,7 +84,7 @@ namespace SSatel {
 		bytes[idx++] = foot2;
 	}
 
-	bool Frame::fromBytes(byte *bytes, uint8_t length) {
+	bool Frame::fromBytes(byte* bytes, uint8_t length) {
 		if (length != dataLength + 7) {
 			// Incorrect frame for given bytes;
 			return false;

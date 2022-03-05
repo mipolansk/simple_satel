@@ -12,8 +12,11 @@ Command to get the violation of zones.
 ### (0x1) Zones tamper
 Command to get the tamper of zones.
 
-### (0x17) Outputs State
+### (0x17) Outputs state
 Command to get the state of outputs.
+
+### (0x88) Outputs on
+Command to set ouputs on.
 
 ## Requirements
 As the library is on very beginning phase it is currently tested only with **ESP8266**/**ESP32** and **Integra64 connected with ETHM-1 Plus** module. It may happen, that it will not work properly with other hardware.

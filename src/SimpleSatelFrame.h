@@ -26,6 +26,9 @@ namespace SSatel {
 		inline uint8_t* getData() {
 			return data;
 		}
+		inline uint8_t getData(int idx) {
+			return data[idx];
+		}
 		inline void setData(uint8_t position, uint8_t value) {
 			data[position] = value;
 		}

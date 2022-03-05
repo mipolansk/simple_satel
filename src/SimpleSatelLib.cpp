@@ -2,6 +2,8 @@
 
 #include "command/Command.h"
 
+void logBytes(uint8_t readCount, byte* bytes);
+
 #define READING_BUFFER_SIZE 64
 
 enum CmdReadingState {
@@ -49,7 +51,7 @@ CmdReadingState nextReadingState(CmdReadingState currentState, byte readByte) {
 	}
 }
 
-bool SimpleSatelLibClass::readAnswer(byte *bytes, int &readCount) {
+bool SimpleSatelLibClass::readAnswer(byte* bytes, int& readCount) {
 	// await answer
 	int waitTime = 0;
 	while (!client.available()) {
@@ -66,7 +68,7 @@ bool SimpleSatelLibClass::readAnswer(byte *bytes, int &readCount) {
 	return readCount > 0;
 }
 
-int SimpleSatelLibClass::readBytes(byte *bytes) {
+int SimpleSatelLibClass::readBytes(byte* bytes) {
 	uint8_t readCount = 0;
 
 	uint8_t frameStartPosition = -1;
@@ -88,7 +90,7 @@ int SimpleSatelLibClass::readBytes(byte *bytes) {
 				// Got one full response. Stopping further processing
 				break;
 			} else if (previousState == AWAITING_CMD
-					&& state == AWAITING_DATA_AND_CRC) {
+				&& state == AWAITING_DATA_AND_CRC) {
 				// Got first byte not equal 0xFE
 				frameStartPosition = i - 3;
 			}
@@ -108,34 +110,36 @@ int SimpleSatelLibClass::readBytes(byte *bytes) {
 	return state == READY ? readCount : 0;
 }
 
-bool SimpleSatelLibClass::processCommand(SSatel::Command command,
-		SSatel::Answer &answer) {
-	// send command
-	byte *bytes = new byte[command.getLength()];
+void SimpleSatelLibClass::sendCommand(SSatel::Command command) {
+	uint8_t length = command.getLength();
+	byte* bytes = new byte[length];
 	command.toBytes(bytes);
-	client.write(bytes, command.getLength());
+
+	// Debug printing...
+	log_printf("Sending command (%d): ", length);
+	logBytes(length, bytes);
+
+	client.write(bytes, length);
 	delete bytes;
+}
 
-	// await answer
-	int waitTime = 0;
-	while (!client.available()) {
-		delay(10);
-		waitTime += 10;
-
-		if (waitTime >= MAX_ANSWER_AWAIT) {
-			return false;
-		}
-	}
+bool SimpleSatelLibClass::processCommand(SSatel::Command command,
+	SSatel::Frame& answer) {
+	// send command
+	sendCommand(command);
 
 	// read answer
 	int readCount = 0;
 	byte readBytes[READING_BUFFER_SIZE];
 	if (!readAnswer(readBytes, readCount)) {
+		log_e("No answer - timeout...");
 		return false;
 	}
 
 	// parse answer
 	if (!answer.fromBytes(readBytes, readCount)) {
+		log_printf("Could not parse answer: ");
+		logBytes(readCount, readBytes);
 		return false;
 	}
 
@@ -146,7 +150,7 @@ bool SimpleSatelLibClass::connected() {
 	return client.connected();
 }
 
-bool SimpleSatelLibClass::connect(const char *host, int port) {
+bool SimpleSatelLibClass::connect(const char* host, int port) {
 	int retry = 0;
 	while (!client.connect(host, port)) {
 		if (retry >= timeout) {
@@ -196,4 +200,31 @@ Result<SSatel::OutputsStateAnswer> SimpleSatelLibClass::readOutputsState() {
 	return result;
 }
 
+Result<SSatel::CommandResultAnswer> SimpleSatelLibClass::setOutputsOn(uint8_t outputsCount, uint8_t* outputsNumbers) {
+	SSatel::OutputsOnCommand command;
+	command.setUserCode(8, userCode);
+	for (int i = 0; i < outputsCount; i++) {
+		command.setActive(outputsNumbers[i]);
+	}
+
+	SSatel::CommandResultAnswer answer;
+	if (processCommand(command, answer)) {
+		Result<SSatel::CommandResultAnswer> result(answer);
+		return result;
+	}
+
+	Result<SSatel::CommandResultAnswer> result;
+	return result;
+}
+
 SimpleSatelLibClass SimpleSatel;
+
+/**
+ * Helper functions
+ */
+void logBytes(uint8_t readCount, byte* bytes) {
+	for (int i = 0; i < readCount; i++) {
+		log_printf("%x ", bytes[i]);
+	}
+	log_printf("\n");
+}
