@@ -2,7 +2,30 @@
 
 #include "command/Command.h"
 
-void logBytes(uint8_t readCount, byte* bytes);
+#define log_db(count, bytes) { \
+		char* output = (char*)malloc((sizeof(char) * count * 3) + 2); \
+		for (int i = 0; i < count; i++) { \
+			char buf[4] = { 0 }; \
+			sprintf(buf, "%02x ", bytes[i]); \
+			strcpy(output + i * 3, buf); \
+		} \
+		output[count * 3 - 2] = 10; \
+		output[count * 3 - 1] = 0; \
+		log_d("%s", output); \
+		delete output; \
+	}
+#define log_eb(count, bytes) { \
+		char* output = (char*)malloc((sizeof(char) * count * 3) + 2); \
+		for (int i = 0; i < count; i++) { \
+			char buf[4] = { 0 }; \
+			sprintf(buf, "%02x ", bytes[i]); \
+			strcpy(output + i * 3, buf); \
+		} \
+		output[count * 3 - 2] = 10; \
+		output[count * 3 - 1] = 0; \
+		log_e("%s", output); \
+		delete output; \
+	}
 
 #define READING_BUFFER_SIZE 64
 
@@ -116,8 +139,8 @@ void SimpleSatelLibClass::sendCommand(SSatel::Command command) {
 	command.toBytes(bytes);
 
 	// Debug printing...
-	log_printf("Sending command (%d): ", length);
-	logBytes(length, bytes);
+	log_d("Sending command (%d):", length);
+	log_db(length, bytes);
 
 	client.write(bytes, length);
 	delete bytes;
@@ -138,8 +161,8 @@ bool SimpleSatelLibClass::processCommand(SSatel::Command command,
 
 	// parse answer
 	if (!answer.fromBytes(readBytes, readCount)) {
-		log_printf("Could not parse answer: ");
-		logBytes(readCount, readBytes);
+		log_e("Could not parse answer:");
+		log_eb(readCount, readBytes);
 		return false;
 	}
 
@@ -218,13 +241,3 @@ Result<SSatel::CommandResultAnswer> SimpleSatelLibClass::setOutputsOn(uint8_t ou
 }
 
 SimpleSatelLibClass SimpleSatel;
-
-/**
- * Helper functions
- */
-void logBytes(uint8_t readCount, byte* bytes) {
-	for (int i = 0; i < readCount; i++) {
-		log_printf("%x ", bytes[i]);
-	}
-	log_printf("\n");
-}
