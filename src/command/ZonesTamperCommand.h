@@ -26,6 +26,10 @@ namespace SSatel {
 		bool isZoneTampered(uint8_t zoneNo) {
 			return isActive(zoneNo);
 		}
+
+		bool acceptsCommand(uint8_t cmd) {
+			return cmd == CMD_ZONE_TAMPER;
+		}
 	};
 }
 

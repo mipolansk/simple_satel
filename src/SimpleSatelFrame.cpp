@@ -85,6 +85,10 @@ namespace SSatel {
 	}
 
 	bool Frame::fromBytes(byte* bytes, uint8_t length) {
+		if (!acceptsCommand(bytes[2])) {
+			// Incorrect command
+			return false;
+		}
 		if (length != dataLength + 7) {
 			// Incorrect frame for given bytes;
 			return false;

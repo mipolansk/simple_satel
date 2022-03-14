@@ -27,6 +27,10 @@ namespace SSatel {
 		inline bool isOutputActive(uint8_t outputNo) {
 			return isActive(outputNo);
 		}
+
+		bool acceptsCommand(uint8_t cmd) {
+			return cmd == CMD_OUTPUT_STATE;
+		}
 	};
 }
 

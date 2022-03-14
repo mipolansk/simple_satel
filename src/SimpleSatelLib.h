@@ -8,7 +8,8 @@
 #include "SimpleSatelFrame.h"
 #include <WiFi.h>
 
-#define MAX_ANSWER_AWAIT 3000
+#define MAX_READING_AWAIT 3000
+#define MAX_ANSWER_AWAIT 15000
 
 template<class T>
 class Result {

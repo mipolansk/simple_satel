@@ -7,7 +7,7 @@
 		for (int i = 0; i < count; i++) { \
 			char buf[4] = { 0 }; \
 			sprintf(buf, "%02x ", bytes[i]); \
-			strcpy(output + i * 3, buf); \
+			strncpy(output + i * 3, buf, 4); \
 		} \
 		output[count * 3 - 2] = 10; \
 		output[count * 3 - 1] = 0; \
@@ -19,7 +19,7 @@
 		for (int i = 0; i < count; i++) { \
 			char buf[4] = { 0 }; \
 			sprintf(buf, "%02x ", bytes[i]); \
-			strcpy(output + i * 3, buf); \
+			strncpy(output + i * 3, buf, 4); \
 		} \
 		output[count * 3 - 2] = 10; \
 		output[count * 3 - 1] = 0; \
@@ -81,7 +81,7 @@ bool SimpleSatelLibClass::readAnswer(byte* bytes, int& readCount) {
 		delay(10);
 		waitTime += 10;
 
-		if (waitTime >= MAX_ANSWER_AWAIT) {
+		if (waitTime >= MAX_READING_AWAIT) {
 			return false;
 		}
 	}
@@ -152,21 +152,30 @@ bool SimpleSatelLibClass::processCommand(SSatel::Command command,
 	sendCommand(command);
 
 	// read answer
-	int readCount = 0;
-	byte readBytes[READING_BUFFER_SIZE];
-	if (!readAnswer(readBytes, readCount)) {
-		log_e("No answer - timeout...");
-		return false;
-	}
+	unsigned long startTime = millis();
+	bool gotAnswer = false;
+	// it may happen, that we get a delayed wrong answer
+	// that's why we loop for answers during the limited time.
+	do {
+		int readCount = 0;
+		byte readBytes[READING_BUFFER_SIZE];
+		if (!readAnswer(readBytes, readCount)) {
+			log_e("No answer - timeout...");
+			continue;
+		}
 
-	// parse answer
-	if (!answer.fromBytes(readBytes, readCount)) {
-		log_e("Could not parse answer:");
-		log_eb(readCount, readBytes);
-		return false;
-	}
+		// parse answer
+		if (!answer.fromBytes(readBytes, readCount)) {
+			log_e("Could not parse answer:");
+			log_eb(readCount, readBytes);
+			continue;
+		}
 
-	return true;
+		gotAnswer = true;
+		break; // answer parsed successfully so break the loop
+	} while (startTime + MAX_ANSWER_AWAIT > millis());
+
+	return gotAnswer;
 }
 
 bool SimpleSatelLibClass::connected() {

@@ -10,7 +10,7 @@ namespace SSatel {
 		uint8_t head1;
 		uint8_t head2;
 		uint8_t cmd;
-		uint8_t *data;
+		uint8_t* data;
 		uint8_t crcHigh;
 		uint8_t crcLow;
 		uint8_t foot1;
@@ -35,15 +35,18 @@ namespace SSatel {
 		inline uint8_t getDataLength() {
 			return dataLength;
 		}
+		virtual bool acceptsCommand(uint8_t cmd) {
+			return false;
+		}
 
 	public:
 		Frame(uint8_t dataLength);
-		Frame(const Frame &toCopy);
-		Frame(byte *bytes, uint8_t length);
+		Frame(const Frame& toCopy);
+		Frame(byte* bytes, uint8_t length);
 		~Frame();
 		void setCommand(uint8_t command);
-		void toBytes(byte *bytes);
-		bool fromBytes(byte *bytes, uint8_t length);
+		void toBytes(byte* bytes);
+		bool fromBytes(byte* bytes, uint8_t length);
 	};
 }
 ;

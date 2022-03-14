@@ -7,6 +7,7 @@
 #define CMD_ZONE_TAMPER 0x1
 #define CMD_OUTPUT_STATE 0x17
 #define CMD_OUTPUTS_ON 0x88
+#define CMD_RESULT 0xEF
 
 #define ANS_ZONE_VIOLATION_DATA_LENGTH 16
 #define ANS_ZONE_TAMPER_DATA_LENGTH 16
@@ -55,6 +56,10 @@ namespace SSatel {
 
 		bool isAccepted() {
 			return getData(0) == 0xFF;
+		}
+
+		bool acceptsCommand(uint8_t cmd) {
+			return cmd == CMD_RESULT;
 		}
 	};
 }

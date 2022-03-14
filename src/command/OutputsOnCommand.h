@@ -41,6 +41,10 @@ namespace SSatel {
 			setData(byteNo, currentValue | (1 << bitNo));
 			return true;
 		}
+
+		bool acceptsCommand(uint8_t cmd) {
+			return cmd == CMD_OUTPUTS_ON;
+		}
 	};
 }
 
